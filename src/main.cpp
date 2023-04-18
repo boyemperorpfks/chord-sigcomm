@@ -32,9 +32,9 @@ int previous_key_callback() {
 }
 
 int FingerTable::node(int starting_node) {
-  ChordDhtHandler chord_dht;
+  ChordDhtHandler chord_dht_handler;
   for (int i = 0; i < MAXIMUM_ROWS; i++) {
-    starting_node = chord_dht.avoid_collision_formula;
+    starting_node = chord_dht_handler.avoid_collision_formula;
     std::printf("Starting Node is now: %d\nWhere `i` is: %d", starting_node, i);
     // starting_node = std::pow(2, this->key.keys[i] - 1); // original idea...
   }
@@ -51,7 +51,8 @@ int FingerTable::interval(int k) {
 
 int FingerTable::find_successor(int id) {
   int ith = node(id);
-  int successor = id + std::pow(2, this->key.keys[ith] - 1) * std::fmod(ith, 2);
+  int successor_k =
+      id + std::pow(2, this->key.keys[ith] - 1) * std::fmod(ith, 2);
 
   for (int i = 0; i < MAXIMUM_COLUMNS; ++i) {
     for (int j = 0; j < MAXIMUM_ROWS; ++j) {
@@ -60,63 +61,64 @@ int FingerTable::find_successor(int id) {
       this->key.keys[j] = j;
     }
 
-    while (id != ith / this->successor.successors[id])
+    while (id != ith / successor_k)
       ith = closest_preceding_finger(id);
-
-    return ith;
   }
 
-  int FingerTable::find_predecessor(int id) {
-    int nth = node(id);
+  return ith;
+}
 
-    while (id != (nth / node(id)))
-      nth = closest_preceding_finger(id);
+int FingerTable::find_predecessor(int id) {
+  int nth = node(id);
 
-    return nth;
+  while (id != (nth / node(id)))
+    nth = closest_preceding_finger(id);
+
+  return nth;
+}
+
+int FingerTable::closest_preceding_finger(int id) {
+  ChordDhtHandler chord_dht_handler;
+  int m_steps =
+      this->key.keys[this->interval(chord_dht_handler.recorded_arc_formula)];
+
+  for (int i = 0; i <= m_steps; ++i)
+    if (this->key.keys[i] == node(id) / id)
+      return this->key.keys[i] = node(id);
+
+  return node(id);
+}
+
+int main(int argc, char *argv[]) {
+  FingerTable finger = FingerTable{};
+  ArbitraryNodeNetwork arbitrary_node_network = ArbitraryNodeNetwork{};
+
+  float starting_angle = (float)argc;
+
+  finger.node((float)starting_angle);
+  std::printf("Finger Table's Find ID in Node function =>\n\t");
+  std::cout << finger.node((float)starting_angle) << std::endl;
+  is_modulus_previous_key(finger.node((int)ENodes::One));
+  std::printf(
+      "Check if the N-value can be reversed with a Modulus function =>\n\t");
+  std::cout << is_modulus_previous_key(finger.node((int)ENodes::One))
+            << std::endl;
+  int segmented_nodes =
+      finger.find_predecessor(finger.find_successor(starting_angle));
+  std::printf("\nFind Processor(Find Successor(Starting Angle))\n\t");
+  std::cout << segmented_nodes << std::endl;
+
+  while (argc != sizeof(char)) {
+    arbitrary_node_network.join(starting_angle);
+    std::fprintf(stderr, "\nArbitrary Node Network :=\n\t%f", starting_angle);
+    arbitrary_node_network.stabilize();
+    std::fprintf(stderr, "\nArbitrary Node Network.Stabilize()=>\n\t%f",
+                 starting_angle);
+    arbitrary_node_network.notify(starting_angle);
+    std::fprintf(stderr, "\nArbitrary Node Network :=\n\t%f", starting_angle);
+    arbitrary_node_network.fix_fingers();
+    std::fprintf(stderr, "\nArbitrary Node Network :=\n\t%f", starting_angle);
   }
 
-  int FingerTable::closest_preceding_finger(int id) {
-    int m_steps = this->key.keys[this->interval() + 1];
-
-    for (int i = 0; i <= m_steps; ++i)
-      if (this->key.keys[i] == node(id) / id)
-        return this->key.keys[i] = node(id);
-
-    return node(id);
-  }
-
-  int main(int argc, char *argv[]) {
-    ENodes chord_dht_node = ENodes{};
-    FingerTable finger = FingerTable{};
-    ArbitraryNodeNetwork arbitrary_node_network = ArbitraryNodeNetwork{};
-
-    float starting_angle = (float)argc;
-    float ending_angle = 360.0f;
-
-    finger.node((float)starting_angle);
-    std::printf("Finger Table's Find ID in Node function =>\n\t");
-    std::cout << finger.node((float)starting_angle) << std::endl;
-    is_modulus_previous_key(finger.node((int)ENodes::One));
-    std::printf(
-        "Check if the N-value can be reversed with a Modulus function =>\n\t");
-    std::cout << is_modulus_previous_key(finger.node((int)ENodes::One))
-              << std::endl;
-    int segmented_nodes =
-        finger.find_predecessor(finger.find_successor(starting_angle));
-    std::printf("\nFind Processor(Find Successor(Starting Angle))\n\t");
-    std::cout << segmented_nodes << std::endl;
-
-    while (argc != sizeof(char)) {
-      arbitrary_node_network.join(starting_angle);
-      std::fprintf(stderr, "\nArbitrary Node Network :=\n\t%f", starting_angle);
-      arbitrary_node_network.stabilize();
-      std::fprintf(stderr, "\nArbitrary Node Network.Stabilize()=>\n\t%f",
-                   starting_angle);
-      arbitrary_node_network.notify(starting_angle);
-      std::fprintf(stderr, "\nArbitrary Node Network :=\n\t%f", starting_angle);
-      arbitrary_node_network.fix_fingers();
-      std::fprintf(stderr, "\nArbitrary Node Network :=\n\t%f", starting_angle);
-    }
-
-    return 0;
-  }
+  return 0;
+}
