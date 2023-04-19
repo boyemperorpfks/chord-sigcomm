@@ -1,5 +1,6 @@
 #include "../inc/arbitrary_node_network.hpp"
 #include "../inc/chord_dht_handler.hpp"
+#include "../inc/user_data_service.hpp"
 #include <cstdio>
 #include <cstdlib>
 
@@ -92,32 +93,38 @@ int FingerTable::closest_preceding_finger(int id) {
 int main(int argc, char *argv[]) {
   FingerTable finger = FingerTable{};
   ArbitraryNodeNetwork arbitrary_node_network = ArbitraryNodeNetwork{};
+  DataImplementation local_data = DataImplementation{};
 
-  float starting_angle = (float)argc;
-
-  finger.node((float)starting_angle);
+  int predecessor = finger.node(local_data.user_data.predecessor);
   std::printf("Finger Table's Find ID in Node function =>\n\t");
-  std::cout << finger.node((float)starting_angle) << std::endl;
-  is_modulus_previous_key(finger.node((int)ENodes::One));
+  std::cout << finger.node(predecessor) << std::endl;
+  is_modulus_previous_key(finger.node(local_data.user_data.successor));
   std::printf(
       "Check if the N-value can be reversed with a Modulus function =>\n\t");
-  std::cout << is_modulus_previous_key(finger.node((int)ENodes::One))
+  std::cout << is_modulus_previous_key(
+                   finger.node(local_data.user_data.successor))
             << std::endl;
   int segmented_nodes =
-      finger.find_predecessor(finger.find_successor(starting_angle));
-  std::printf("\nFind Processor(Find Successor(Starting Angle))\n\t");
+      finger.find_predecessor(finger.find_successor(predecessor));
+  std::printf("\nFind Successor in Starting Node of: Predecessor ID\n\t");
   std::cout << segmented_nodes << std::endl;
 
-  while (argc != sizeof(char)) {
-    arbitrary_node_network.join(starting_angle);
-    std::fprintf(stderr, "\nArbitrary Node Network :=\n\t%f", starting_angle);
+  while (true) {
+    arbitrary_node_network.join(predecessor);
+    std::fprintf(stderr, "\nArbitrary Node Network :=\n\t%d", predecessor);
     arbitrary_node_network.stabilize();
-    std::fprintf(stderr, "\nArbitrary Node Network.Stabilize()=>\n\t%f",
-                 starting_angle);
-    arbitrary_node_network.notify(starting_angle);
-    std::fprintf(stderr, "\nArbitrary Node Network :=\n\t%f", starting_angle);
+    std::fprintf(stderr, "\nArbitrary Node Network.Stabilize()=>\n\t%d",
+                 predecessor);
+    arbitrary_node_network.notify(segmented_nodes);
+    std::fprintf(stderr, "\nArbitrary Node Network :=\n\t%d", predecessor);
     arbitrary_node_network.fix_fingers();
-    std::fprintf(stderr, "\nArbitrary Node Network :=\n\t%f", starting_angle);
+    std::fprintf(stderr, "\nArbitrary Node Network :=\n\t%d", predecessor);
+
+    local_data.verify_scoped_lambda_integrity(
+        (int)local_data.user_data.predecessor);
+
+    exit(0);
+    return 1;
   }
 
   return 0;
