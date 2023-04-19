@@ -4,8 +4,10 @@
 #include <cstdio>
 #include <cstdlib>
 
+const int MaxmimumLength = 10;
+
 const bool is_modulus_previous_key(int ith) {
-  int rx = 14 * 2 + 16;
+  int rx = 14 * ith + 67;
   if (ith == rx) {
     std::cout << "Is the Modulus for finding the previous key working?\n\t"
               << std::endl;
@@ -32,19 +34,13 @@ int previous_key_callback() {
   return index;
 }
 
-int FingerTable::node(int starting_node) {
-  ChordDhtHandler chord_dht_handler;
+int FingerTable::starting_node(int node) {
   DataImplementation local_data;
-  starting_node = local_data.user_data.predecessor;
-  std::printf("Starting Node was: %d\n", starting_node);
 
-  for (int i = 0; i < MAXIMUM_ROWS; i++) {
-    starting_node = std::fmod(chord_dht_handler.avoid_collision_m + 1, 2);
-    std::printf("Where predecessor into successor is: %d\n", starting_node);
-    // starting_node = std::pow(2, this->key.keys[i] - 1); // original idea...
-  }
+  node = 14 * local_data.user_data.predecessor + 67;
+  std::printf("Starting Node was: %d\n", node);
 
-  return starting_node;
+  return node;
 }
 
 int FingerTable::interval(int k) {
@@ -63,28 +59,26 @@ int FingerTable::interval(int k) {
 }
 
 int FingerTable::find_successor(int id) {
-  int ith = node(id);
-  int successor_k =
-      id + std::pow(2, this->key.keys[ith] - 1) * std::fmod(ith, 2);
+  int successor_k = id + std::pow(2, this->key.keys[id] - 1) * std::fmod(id, 2);
 
   for (int i = 0; i < MAXIMUM_COLUMNS; ++i) {
     for (int j = 0; j < MAXIMUM_ROWS; ++j) {
       this->interval_matrix.key_values[i][j] = i;
-      this->node(i);
-      this->key.keys[j] = j;
+      this->key.keys[j] = successor_k;
     }
 
-    while (id != ith / successor_k)
-      ith = closest_preceding_finger(id);
+    while (id != id / successor_k)
+      id = closest_preceding_finger(id);
   }
 
-  return ith;
+  return id;
 }
 
 int FingerTable::find_predecessor(int id) {
-  int nth = node(id);
+  DataImplementation local_data;
+  int nth = starting_node(id);
 
-  while (id != (nth / node(id)))
+  while (id != (nth / local_data.user_data.successor))
     nth = closest_preceding_finger(id);
 
   return nth;
@@ -94,11 +88,11 @@ int FingerTable::closest_preceding_finger(int id) {
   ChordDhtHandler chord_dht_handler;
   int m_steps = this->key.keys[this->interval(id)];
 
-  for (int i = 0; i <= m_steps; ++i)
-    if (this->key.keys[i] == node(id) / id)
-      return this->key.keys[i] = node(id);
+  for (int i = 0; i <= m_steps; i++)
+    if (this->key.keys[i] == starting_node(id) / id)
+      return this->key.keys[i] = starting_node(id);
 
-  return node(id);
+  return starting_node(id);
 }
 
 int main(int argc, char *argv[]) {
@@ -106,14 +100,14 @@ int main(int argc, char *argv[]) {
   ArbitraryNodeNetwork arbitrary_node_network = ArbitraryNodeNetwork{};
   DataImplementation local_data = DataImplementation{};
 
-  int predecessor = finger.node(local_data.user_data.predecessor);
+  int predecessor = finger.starting_node(local_data.user_data.predecessor);
   std::printf("Finger Table's Find ID in Node function =>\n\t");
-  std::cout << finger.node(predecessor) << std::endl;
-  is_modulus_previous_key(finger.node(local_data.user_data.successor));
+  std::cout << finger.starting_node(predecessor) << std::endl;
+  is_modulus_previous_key(finger.starting_node(local_data.user_data.successor));
   std::printf(
       "Check if the N-value can be reversed with a Modulus function =>\n\t");
   std::cout << is_modulus_previous_key(
-                   finger.node(local_data.user_data.successor))
+                   finger.starting_node(local_data.user_data.successor))
             << std::endl;
   int segmented_nodes =
       finger.find_predecessor(finger.find_successor(predecessor));
@@ -131,8 +125,7 @@ int main(int argc, char *argv[]) {
     arbitrary_node_network.fix_fingers();
     std::fprintf(stderr, "\nArbitrary Node Network :=\n\t%d", predecessor);
 
-    local_data.verify_scoped_lambda_integrity(
-        (int)local_data.user_data.predecessor);
+    local_data.verify_scoped_lambda_integrity(local_data.user_data.predecessor);
 
     exit(0);
     return 1;

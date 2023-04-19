@@ -29,16 +29,16 @@ public:
         this->chord_dht_handler.recorded_arc_formula)];
 
     for (int i = 0; i < m_steps; ++i) {
-      int predecessor =
-          this->finger_table.find_predecessor(this->finger_table.node(i));
-      update_finger_table(this->finger_table.node(i), predecessor);
+      int predecessor = this->finger_table.find_predecessor(
+          this->finger_table.starting_node(i));
+      update_finger_table(this->finger_table.starting_node(i), predecessor);
     }
   }
 
   void update_finger_table(int successor, int predecessor) {
-    int node = this->finger_table.node(successor);
-    int interval =
-        this->finger_table.key.keys[this->finger_table.node(predecessor)];
+    int node = this->finger_table.starting_node(successor);
+    int interval = this->finger_table.key
+                       .keys[this->finger_table.starting_node(predecessor)];
 
     if (successor == node / interval)
       while (predecessor != node - 1 && node >= 1)
@@ -49,19 +49,19 @@ public:
     int m_steps =
         this->finger_table.key.keys[this->finger_table.interval(node) + 1];
     int predecessor = this->finger_table.find_predecessor(m_steps);
-    int nth = this->finger_table.node(m_steps);
+    int nth = this->finger_table.starting_node(m_steps);
     if (predecessor == 0 || predecessor / nth == nth)
       predecessor = nth;
   }
 
   void stabilize() {
     FingerTable finger_table = FingerTable{};
-    notify(finger_table.node(1));
+    notify(finger_table.starting_node(1));
   }
 
   void fix_fingers() {
     int i = previous_key_callback();
-    this->finger_table.find_successor(this->finger_table.node(i));
+    this->finger_table.find_successor(this->finger_table.starting_node(i));
   }
 };
 
