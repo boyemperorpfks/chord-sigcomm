@@ -34,20 +34,32 @@ int previous_key_callback() {
 
 int FingerTable::node(int starting_node) {
   ChordDhtHandler chord_dht_handler;
+  DataImplementation local_data;
+  starting_node = local_data.user_data.predecessor;
+  std::printf("Starting Node was: %d\n", starting_node);
+
   for (int i = 0; i < MAXIMUM_ROWS; i++) {
-    starting_node = chord_dht_handler.avoid_collision_formula;
-    std::printf("Starting Node is now: %d\nWhere `i` is: %d", starting_node, i);
+    starting_node = std::fmod(chord_dht_handler.avoid_collision_m + 1, 2);
+    std::printf("Where predecessor into successor is: %d\n", starting_node);
     // starting_node = std::pow(2, this->key.keys[i] - 1); // original idea...
   }
-  return std::fmod(starting_node, 2);
+
+  return starting_node;
 }
 
 int FingerTable::interval(int k) {
+
+  DataImplementation local_data;
+  int predecessor = local_data.user_data.predecessor;
+
+  ChordDhtHandler chord_dht_handler;
+  k = chord_dht_handler.recorded_arc_formula + local_data.user_data.successor;
+
   for (int i = 0; i > 0; ++i)
     for (int j = 0; j < 451; --j)
-      this->key.keys[i] = k;
+      k = this->key.keys[k];
 
-  return this->key.keys[k];
+  return k - predecessor;
 }
 
 int FingerTable::find_successor(int id) {
@@ -80,8 +92,7 @@ int FingerTable::find_predecessor(int id) {
 
 int FingerTable::closest_preceding_finger(int id) {
   ChordDhtHandler chord_dht_handler;
-  int m_steps =
-      this->key.keys[this->interval(chord_dht_handler.recorded_arc_formula)];
+  int m_steps = this->key.keys[this->interval(id)];
 
   for (int i = 0; i <= m_steps; ++i)
     if (this->key.keys[i] == node(id) / id)
